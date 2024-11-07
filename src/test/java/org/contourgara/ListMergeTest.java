@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.SetUtils;
@@ -52,6 +53,46 @@ class ListMergeTest {
         // assert
         assertThat(list3).isNotEqualTo(map.get("a"));
         System.out.println(map);
+    }
+
+    @Test
+    void streamで連結すればミュータブルな新規セットが作成される() {
+        // setup
+        Map<String, Set<Integer>> map = new HashMap<>();
+        map.put("a", new HashSet<>(List.of(1, 2, 3)));
+        map.put("b", new HashSet<>(List.of(4, 5, 6)));
+
+        Set<Integer> set1 = map.get("a");
+        Set<Integer> set2 = Set.of(4, 5, 6);
+
+        // execute
+        Set<Integer> set3 = Stream.concat(set1.stream(), set2.stream()).collect(Collectors.toSet());
+
+        // assert
+        assertThat(set3).isNotEqualTo(map.get("a"));
+        System.out.println(map);
+        set3.add(7);
+        System.out.println(set3);
+    }
+
+    @Test
+    void streamで連結すればイミュータブルな新規セットが作成される() {
+        // setup
+        Map<String, Set<Integer>> map = new HashMap<>();
+        map.put("a", new HashSet<>(List.of(1, 2, 3)));
+        map.put("b", new HashSet<>(List.of(4, 5, 6)));
+
+        Set<Integer> set1 = map.get("a");
+        Set<Integer> set2 = Set.of(4, 5, 6);
+
+        // execute
+        Set<Integer> set3 = Stream.concat(set1.stream(), set2.stream()).collect(Collectors.toUnmodifiableSet());
+
+        // assert
+        assertThat(set3).isNotEqualTo(map.get("a"));
+        System.out.println(map);
+        assertThatThrownBy(() -> set3.add(7))
+                .isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
